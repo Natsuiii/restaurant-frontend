@@ -8,9 +8,15 @@ import { Share2, ShoppingBag, Star } from "lucide-react";
 import MenuCard from "../components/MenuCard";
 import ReviewCard from "../components/ReviewCard";
 import { Button } from "../components/ui/button";
-import { useAppDispatch, useAppSelector } from "../features/hooks";
-import { addToCart, updateQty } from "../features/cart/cartSlice";
+import { useAppSelector } from "../features/hooks";
 import { formatCurrency } from "../lib/formatCurrency";
+import { useNavigate } from "react-router-dom";
+import type { RestaurantMenu } from "../types/restaurant";
+import {
+  useAddCartItemMutation,
+  useUpdateCartItemMutation,
+  useDeleteCartItemMutation,
+} from "../services/queries/cart";
 
 const RestaurantDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,8 +30,14 @@ const RestaurantDetailPage: React.FC = () => {
     limitReview
   );
 
-  const dispatch = useAppDispatch();
+  const [pendingMenuId, setPendingMenuId] = React.useState<number | null>(null);
+
   const cart = useAppSelector((state) => state.cart);
+  const navigate = useNavigate();
+
+  const addCartMutation = useAddCartItemMutation();
+  const updateCartMutation = useUpdateCartItemMutation();
+  const deleteCartMutation = useDeleteCartItemMutation();
 
   React.useEffect(() => {
     if (isError) {
@@ -44,39 +56,56 @@ const RestaurantDetailPage: React.FC = () => {
   }, [cart.items, restaurant]);
 
   const getQty = (menuId: number): number => {
-    if (!restaurant) return 0;
-    const idKey = `${restaurant.id}-${menuId}`;
-    const it = cartItemsForThisResto.find((i) => i.id === idKey);
+    const it = cartItemsForThisResto.find((i) => i.menuId === menuId);
     return it?.qty ?? 0;
   };
 
-  const handleAdd = (menu: any) => {
+  const handleAdd = (menu: RestaurantMenu) => {
     if (!restaurant) return;
-    const idKey = `${restaurant.id}-${menu.id}`;
-    dispatch(
-      addToCart({
-        id: idKey,
+    if (pendingMenuId !== null) return;
+
+    setPendingMenuId(menu.id);
+    addCartMutation.mutate(
+      {
         restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
         menuId: menu.id,
-        name: menu.foodName,
-        price: menu.price,
-        qty: 1,
-        image: menu.image,
-      })
+        quantity: 1,
+      },
+      {
+        onSettled: () => {
+          setPendingMenuId(null);
+        },
+      }
     );
   };
 
   const handleUpdateQty = (menuId: number, nextQty: number) => {
     if (!restaurant) return;
-    const idKey = `${restaurant.id}-${menuId}`;
-    dispatch(updateQty({ id: idKey, qty: nextQty }));
+    if (pendingMenuId !== null) return;
+
+    const existing = cartItemsForThisResto.find((i) => i.menuId === menuId);
+    if (!existing) return;
+
+    setPendingMenuId(menuId);
+
+    if (nextQty <= 0) {
+      deleteCartMutation.mutate(existing.id, {
+        onSettled: () => setPendingMenuId(null),
+      });
+    } else {
+      updateCartMutation.mutate(
+        {
+          id: existing.id,
+          body: { quantity: nextQty },
+        },
+        {
+          onSettled: () => setPendingMenuId(null),
+        }
+      );
+    }
   };
 
-  const totalItems = cartItemsForThisResto.reduce(
-    (sum, it) => sum + it.qty,
-    0
-  );
+  const totalItems = cartItemsForThisResto.reduce((sum, it) => sum + it.qty, 0);
   const totalPrice = cartItemsForThisResto.reduce(
     (sum, it) => sum + it.qty * it.price,
     0
@@ -107,8 +136,7 @@ const RestaurantDetailPage: React.FC = () => {
   const hasMoreReviews =
     restaurant && restaurant.totalReviews > restaurant.reviews.length;
 
-  const ratingValue =
-    restaurant?.averageRating ?? restaurant?.star ?? 0;
+  const ratingValue = restaurant?.averageRating ?? restaurant?.star ?? 0;
 
   if (isLoading || !restaurant) {
     return (
@@ -179,9 +207,7 @@ const RestaurantDetailPage: React.FC = () => {
                 </h1>
                 <div className="mt-1 flex items-center gap-2 text-sm text-slate-600">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">
-                    {ratingValue.toFixed(1)}
-                  </span>
+                  <span className="font-medium">{ratingValue.toFixed(1)}</span>
                   <span className="text-slate-400">
                     ({restaurant.totalReviews} reviews)
                   </span>
@@ -240,11 +266,14 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {filteredMenus.map((menu) => {
               const qty = getQty(menu.id);
+              const isLoadingMenu = pendingMenuId === menu.id;
+
               return (
                 <MenuCard
                   key={menu.id}
                   menu={menu}
                   quantity={qty}
+                  loading={isLoadingMenu} // <-- NEW
                   onAdd={() => handleAdd(menu)}
                   onIncrement={() => handleUpdateQty(menu.id, qty + 1)}
                   onDecrement={() => handleUpdateQty(menu.id, qty - 1)}
@@ -276,9 +305,7 @@ const RestaurantDetailPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-800">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-semibold">
-                {ratingValue.toFixed(2)}
-              </span>
+              <span className="font-semibold">{ratingValue.toFixed(2)}</span>
               <span className="text-slate-500">
                 ({restaurant.totalReviews} Users)
               </span>
@@ -329,7 +356,10 @@ const RestaurantDetailPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Button className="rounded-full bg-red-600 px-8 text-sm font-medium hover:bg-red-700 text-white">
+            <Button
+              className="rounded-full bg-red-600 px-8 text-sm font-medium hover:bg-red-700 text-white"
+              onClick={() => navigate("/cart")}
+            >
               Checkout
             </Button>
           </div>

@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "./ui/button";
 import type { RestaurantMenu } from "../types/restaurant";
 import { formatCurrency } from "../lib/formatCurrency";
+import { Loader2 } from "lucide-react";
 
 interface MenuCardProps {
   menu: RestaurantMenu;
@@ -9,6 +10,7 @@ interface MenuCardProps {
   onAdd: () => void;
   onIncrement: () => void;
   onDecrement: () => void;
+  loading?: boolean;
 }
 
 const MenuCard: React.FC<MenuCardProps> = ({
@@ -17,6 +19,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
   onAdd,
   onIncrement,
   onDecrement,
+  loading = false,
 }) => {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -43,10 +46,15 @@ const MenuCard: React.FC<MenuCardProps> = ({
           {quantity <= 0 ? (
             <Button
               size="sm"
-              className="rounded-full bg-red-600 px-4 text-xs font-medium hover:bg-red-700 text-white"
+              className="rounded-full bg-red-600 px-4 text-xs font-medium hover:bg-red-700"
               onClick={onAdd}
+              disabled={loading} 
             >
-              Add
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Add"
+              )}
             </Button>
           ) : (
             <div className="flex items-center gap-2">
@@ -55,8 +63,9 @@ const MenuCard: React.FC<MenuCardProps> = ({
                 variant="outline"
                 className="h-7 w-7 rounded-full border-slate-300"
                 onClick={onDecrement}
+                disabled={loading}
               >
-                -
+                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : "−"}
               </Button>
               <span className="text-sm font-medium text-slate-900">
                 {quantity}
@@ -66,8 +75,9 @@ const MenuCard: React.FC<MenuCardProps> = ({
                 variant="outline"
                 className="h-7 w-7 rounded-full border-slate-300"
                 onClick={onIncrement}
+                disabled={loading}
               >
-                +
+                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : "+"}
               </Button>
             </div>
           )}

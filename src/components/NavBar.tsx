@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  ShoppingCart,
-  MapPin,
-  FileText,
-  LogOut,
-} from "lucide-react";
+import { ShoppingCart, MapPin, FileText, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAppSelector, useAppDispatch } from "../features/hooks";
 import { logout } from "../features/auth/authSlice";
@@ -17,6 +12,8 @@ import {
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
+import { clearCart } from "../features/cart/cartSlice";
+import { useCartQuery } from "../services/queries/cart";
 
 interface NavbarProps {
   variant?: "auto" | "solid";
@@ -31,6 +28,8 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "auto" }) => {
   const isLoggedIn = Boolean(auth.token);
   const userName = auth.user?.name ?? "";
 
+  useCartQuery(isLoggedIn);
+  
   const [isScrolled, setIsScrolled] = React.useState(false);
 
   React.useEffect(() => {
@@ -59,20 +58,21 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "auto" }) => {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(clearCart());
     navigate("/", { replace: true });
   };
 
-  const totalCartItems = cart.items.reduce(
-    (sum, it) => sum + it.qty,
-    0
-  );
+  const totalCartItems = cart.items.reduce((sum, it) => sum + it.qty, 0);
 
   return (
     <header
       className={`fixed inset-x-0 top-0 z-30 transition-colors duration-300 ${wrapperClass}`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <div className="flex items-center gap-2 h-10 w-10 cursor-pointer" onClick={() => navigate("/", { replace: true })}>
+        <div
+          className="flex items-center gap-2 h-10 w-10 cursor-pointer"
+          onClick={() => navigate("/", { replace: true })}
+        >
           <img
             src="/logo.png"
             alt="Foody logo"
@@ -103,6 +103,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "auto" }) => {
           <div className="flex items-center gap-4">
             <button
               type="button"
+              onClick={() => navigate("/cart")}
               className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-current hover:bg-white/20"
             >
               <ShoppingCart className="h-5 w-5" />
