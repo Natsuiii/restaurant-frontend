@@ -5,8 +5,7 @@ import AccountSidebar from "@/components/AccountSidebar";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Star, Search, X, Loader2 } from "lucide-react";
-import dayjs from "dayjs";
+import { Star, Search, Loader2 } from "lucide-react";
 import { useMyOrdersQuery } from "../services/queries/orders";
 import type { OrderStatus, OrderSummaryDTO } from "../types/orders";
 import { formatCurrency } from "../lib/formatCurrency";
@@ -131,7 +130,6 @@ const MyOrdersPage: React.FC = () => {
   }, [orderRestaurants, search]);
 
   const renderOrderCard = (order: OrderRestaurantView) => {
-    const updatedLabel = dayjs(order.updatedAt).format("DD MMM YYYY, HH:mm");
 
     
 
