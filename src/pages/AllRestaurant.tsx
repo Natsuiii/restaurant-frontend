@@ -11,7 +11,7 @@ import {
   setRating,
 } from "../features/filters/restoFiltersSlice";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "../components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
 import { Input } from "../components/ui/input";
