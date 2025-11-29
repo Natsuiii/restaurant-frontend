@@ -26,7 +26,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
       </div>
 
       <div className="mt-3 flex items-center gap-1 text-xs text-slate-600">
-        {[...Array(rating)].map((_, i) => (
+        {[...Array(rating)].map((_) => (
           <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
         ))}
       </div>
