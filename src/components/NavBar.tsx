@@ -154,7 +154,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = "auto" }) => {
                   </div>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem className="cursor-pointer px-4 py-2.5 text-sm">
+                <DropdownMenuItem className="cursor-pointer px-4 py-2.5 text-sm" onClick={() => navigate("/orders")}>
                   <div className="flex items-center gap-3">
                     <FileText className="h-4 w-4" />
                     <span>My Orders</span>

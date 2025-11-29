@@ -48,3 +48,44 @@ export interface CheckoutResponse {
     transaction: TransactionDTO;
   };
 }
+
+export type OrderStatus =
+  | "preparing"
+  | "on_the_way"
+  | "delivered"
+  | "done"
+  | "cancelled";
+
+export interface OrderRestaurantDTO {
+  restaurantId: number;
+  restaurantName: string;
+  items: TransactionItemDTO[];
+  subtotal: number;
+}
+
+export interface OrderSummaryDTO {
+  id: number;
+  transactionId: string;
+  status: OrderStatus;
+  paymentMethod: string;
+  pricing: TransactionPricing;
+  restaurants: OrderRestaurantDTO[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MyOrdersResponse {
+  success: boolean;
+  data: {
+    orders: OrderSummaryDTO[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+    filter: {
+      status: string | null;
+    };
+  };
+}

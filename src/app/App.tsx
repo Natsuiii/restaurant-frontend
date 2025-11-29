@@ -9,6 +9,8 @@ import AllRestaurantsPage from "@/pages/AllRestaurant";
 import CartPage from "../pages/Cart";
 import CheckoutPage from "../pages/Checkout";
 import CheckoutSuccessPage from "../pages/CheckoutSuccess";
+import MyOrdersPage from "../pages/MyOrders";
+import ProfilePage from "../pages/Profile";
 
 const App: React.FC = () => {
   const auth = useAppSelector((state) => state.auth);
@@ -45,6 +47,18 @@ const App: React.FC = () => {
           element={isLoggedIn ? <Navigate to="/" replace /> : <AuthPage />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/orders"
+          element={
+            isLoggedIn ? <MyOrdersPage /> : <Navigate to="/auth" replace />
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            isLoggedIn ? <ProfilePage /> : <Navigate to="/auth" replace />
+          }
+        />
       </Routes>
 
       <Toaster richColors position="top-right" />

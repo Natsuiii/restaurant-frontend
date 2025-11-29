@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { api } from "../api/axios";
-import type { CheckoutRequest, CheckoutResponse } from "../../types/orders";
+import type { CheckoutRequest, CheckoutResponse, MyOrdersResponse, OrderStatus } from "../../types/orders";
 import { clearCart } from "../../features/cart/cartSlice";
 import { useAppDispatch } from "../../features/hooks";
 
@@ -22,6 +22,31 @@ export function useCheckoutMutation() {
     onSuccess: () => {
       dispatch(clearCart());
       queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
+    },
+  });
+}
+
+export function useMyOrdersQuery(params: {
+  status?: OrderStatus;
+  page?: number;
+  limit?: number;
+}) {
+  const { status, page = 1, limit = 10 } = params;
+
+  return useQuery<MyOrdersResponse, AxiosError>({
+    queryKey: ["my-orders", { status, page, limit }],
+    queryFn: async () => {
+      const res = await api.get<MyOrdersResponse>(
+        "/order/my-order",
+        {
+          params: {
+            status,
+            page,
+            limit,
+          },
+        }
+      );
+      return res.data;
     },
   });
 }
