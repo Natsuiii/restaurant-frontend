@@ -7,7 +7,7 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Star, Search, Loader2 } from "lucide-react";
 import { useMyOrdersQuery } from "../services/queries/orders";
-import type { OrderStatus, OrderSummaryDTO } from "../types/orders";
+import type { OrderStatus } from "../types/orders";
 import { formatCurrency } from "../lib/formatCurrency";
 import { useCreateReviewMutation } from "@/services/queries/review";
 import { toast } from "sonner";
