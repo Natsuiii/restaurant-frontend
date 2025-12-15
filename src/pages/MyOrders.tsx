@@ -23,6 +23,24 @@ const STATUS_TABS: { value: OrderStatus | "all"; label: string }[] = [
   { value: "cancelled", label: "Canceled" },
 ];
 
+// interface OrderRestaurantView {
+//   id: string;
+//   transactionId: string;
+//   status: OrderStatus;
+//   paymentMethod: string;
+//   updatedAt: string;
+//   restaurantId: number;
+//   restaurantName: string;
+//   items: {
+//     menuId: number;
+//     menuName: string;
+//     price: number;
+//     quantity: number;
+//     itemTotal: number;
+//   }[];
+//   subtotal: number;
+// }
+
 interface OrderRestaurantView {
   id: string;
   transactionId: string;
@@ -31,12 +49,14 @@ interface OrderRestaurantView {
   updatedAt: string;
   restaurantId: number;
   restaurantName: string;
+  restaurantLogo: string | null;
   items: {
     menuId: number;
     menuName: string;
     price: number;
     quantity: number;
     itemTotal: number;
+    image: string | null;
   }[];
   subtotal: number;
 }
@@ -64,16 +84,19 @@ const MyOrdersPage: React.FC = () => {
   const orderRestaurants: OrderRestaurantView[] = React.useMemo(() => {
     const list: OrderRestaurantView[] = [];
 
-    rawOrders.forEach((order: OrderSummaryDTO) => {
+    rawOrders.forEach((order) => {
       order.restaurants.forEach((resto) => {
         list.push({
-          id: `${order.id}-${resto.restaurantId}`,
+          id: `${order.id}-${resto.restaurant.id}`,
           transactionId: order.transactionId,
           status: order.status,
           paymentMethod: order.paymentMethod,
           updatedAt: order.updatedAt,
-          restaurantId: resto.restaurantId,
-          restaurantName: resto.restaurantName,
+
+          restaurantId: resto.restaurant.id,
+          restaurantName: resto.restaurant.name,
+          restaurantLogo: resto.restaurant.logo,
+
           items: resto.items,
           subtotal: resto.subtotal,
         });
@@ -84,35 +107,35 @@ const MyOrdersPage: React.FC = () => {
   }, [rawOrders]);
 
   const handleOpenReview = (order: OrderRestaurantView) => {
-      setReviewTarget(order);
-      setRating(0);
-      setComment("");
-      setReviewDialogOpen(true);
-    };
+    setReviewTarget(order);
+    setRating(0);
+    setComment("");
+    setReviewDialogOpen(true);
+  };
 
-    const handleSubmitReview = () => {
-      if (!reviewTarget || rating <= 0) return;
+  const handleSubmitReview = () => {
+    if (!reviewTarget || rating <= 0) return;
 
-      reviewMutation.mutate(
-        {
-          transactionId: reviewTarget.transactionId,
-          restaurantId: reviewTarget.restaurantId,
-          star: rating,
-          comment: comment.trim(),
+    reviewMutation.mutate(
+      {
+        transactionId: reviewTarget.transactionId,
+        restaurantId: reviewTarget.restaurantId,
+        star: rating,
+        comment: comment.trim(),
+      },
+      {
+        onSuccess: (data) => {
+          toast.success(data.message || "Review submitted");
+          setReviewDialogOpen(false);
         },
-        {
-          onSuccess: (data) => {
-            toast.success(data.message || "Review submitted");
-            setReviewDialogOpen(false);
-          },
-          onError: (error: any) => {
-            const msg =
-              error?.response?.data?.message || "Failed to submit review";
-            toast.error(msg);
-          },
-        }
-      );
-    };
+        onError: (error: any) => {
+          const msg =
+            error?.response?.data?.message || "Failed to submit review";
+          toast.error(msg);
+        },
+      }
+    );
+  };
 
   const filteredOrderRestaurants = React.useMemo(() => {
     if (!search.trim()) return orderRestaurants;
@@ -130,16 +153,13 @@ const MyOrdersPage: React.FC = () => {
   }, [orderRestaurants, search]);
 
   const renderOrderCard = (order: OrderRestaurantView) => {
-
-    
-
     return (
       <div key={order.id} className="rounded-3xl bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
               <img
-                src="/orders/restaurant.png"
+                src={order.restaurantLogo ?? "/orders/restaurant.png"}
                 alt={order.restaurantName}
                 className="h-full w-full object-contain"
               />
@@ -159,7 +179,7 @@ const MyOrdersPage: React.FC = () => {
               <div className="flex flex-1 items-center gap-3">
                 <div className="h-11 w-11 overflow-hidden rounded-xl bg-slate-100">
                   <img
-                    src="/images/order-item-placeholder.png"
+                    src={item.image ?? "/images/order-item-placeholder.png"}
                     alt={item.menuName}
                     className="h-full w-full object-cover"
                   />
@@ -260,8 +280,7 @@ const MyOrdersPage: React.FC = () => {
                   type="button"
                   onClick={() => setReviewDialogOpen(false)}
                   className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
-                >
-                </button>
+                ></button>
               </div>
 
               <div className="px-6 pb-6 pt-4">

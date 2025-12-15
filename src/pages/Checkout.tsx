@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { useAppSelector } from "../features/hooks";
+import { useAppDispatch, useAppSelector } from "../features/hooks";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "../lib/formatCurrency";
 import { Button } from "../components/ui/button";
@@ -14,6 +14,7 @@ import {
 } from "../services/queries/cart";
 import { useCheckoutMutation } from "../services/queries/orders";
 import { toast } from "sonner";
+import { clearCart } from "@/features/cart/cartSlice";
 
 interface CartGroup {
   restaurantId: number;
@@ -65,6 +66,7 @@ const CheckoutPage: React.FC = () => {
   const updateCartMutation = useUpdateCartItemMutation();
   const deleteCartMutation = useDeleteCartItemMutation();
   const checkoutMutation = useCheckoutMutation();
+  const dispatch = useAppDispatch();
 
   const [pendingItemId, setPendingItemId] = React.useState<number | null>(null);
   const [selectedPayment, setSelectedPayment] = React.useState<string>("bni");
@@ -84,7 +86,7 @@ const CheckoutPage: React.FC = () => {
       }
       const group = map.get(item.restaurantId)!;
       group.items.push({
-        id: item.id,
+        id: item.menuId,
         name: item.name,
         price: item.price,
         qty: item.qty,
@@ -155,10 +157,20 @@ const CheckoutPage: React.FC = () => {
         paymentMethod: pm.label,
         deliveryAddress: DELIVERY_ADDRESS,
         notes: "",
+        phone: phoneNumber,
+        restaurants: groups.map((group) => ({
+          restaurantId: group.restaurantId,
+          items: group.items.map((item) => ({
+            menuId: item.id,
+            quantity: item.qty,
+          })),
+        })),
       },
       {
         onSuccess: (data) => {
           toast.success("Order placed successfully");
+
+          dispatch(clearCart());
           navigate("/checkout/success", {
             state: { transaction: data.data.transaction },
           });

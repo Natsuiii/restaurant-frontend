@@ -11,6 +11,7 @@ export interface TransactionItemDTO {
   price: number;
   quantity: number;
   itemTotal: number;
+  image: string;
 }
 
 export interface TransactionRestaurantDTO {
@@ -39,6 +40,16 @@ export interface CheckoutRequest {
   paymentMethod: string;
   deliveryAddress: string;
   notes?: string;
+  phone: string;
+  restaurants: Restaurant[];
+}
+
+interface Restaurant {
+  restaurantId: number;
+  items: {
+    menuId: number;
+    quantity: number;
+  }[];
 }
 
 export interface CheckoutResponse {
@@ -57,9 +68,19 @@ export type OrderStatus =
   | "cancelled";
 
 export interface OrderRestaurantDTO {
-  restaurantId: number;
-  restaurantName: string;
-  items: TransactionItemDTO[];
+  restaurant: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
+  items: Array<{
+    menuId: number;
+    menuName: string;
+    price: number;
+    image: string | null;
+    quantity: number;
+    itemTotal: number;
+  }>;
   subtotal: number;
 }
 
@@ -68,10 +89,8 @@ export interface OrderSummaryDTO {
   transactionId: string;
   status: OrderStatus;
   paymentMethod: string;
-  pricing: TransactionPricing;
-  restaurants: OrderRestaurantDTO[];
-  createdAt: string;
   updatedAt: string;
+  restaurants: OrderRestaurantDTO[];
 }
 
 export interface MyOrdersResponse {

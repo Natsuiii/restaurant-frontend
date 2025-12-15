@@ -22,6 +22,10 @@ export interface CreateReviewRequest {
   restaurantId: number;
   star: number;
   comment: string;
+  // items: {
+  //   menuId: number;
+  //   quantity: number;
+  // }[];
 }
 
 export interface CreateReviewResponse {
